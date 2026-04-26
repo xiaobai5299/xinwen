@@ -332,7 +332,7 @@ def main():
     print(f"✅ HTML已生成: {html_path}")
     
     # 3. 尝试发微信推送
-    if APP_ID and APP_SECRET and OPEN_ID and TEMPLATE_ID:
+    if APP_ID and APP_SECRET and OPEN_IDS and TEMPLATE_ID:
         try:
             token = get_access_token()
             summary = generate_summary(news_data, push_type)
