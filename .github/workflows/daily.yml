@@ -28,7 +28,7 @@ jobs:
         env:
           APP_ID: ${{ secrets.APP_ID }}
           APP_SECRET: ${{ secrets.APP_SECRET }}
-          OPEN_ID: ${{ secrets.OPEN_ID }}
+          OPEN_IDS: ${{ secrets.OPEN_IDS }}
           TEMPLATE_ID: ${{ secrets.TEMPLATE_ID }}
         run: python main.py
       
