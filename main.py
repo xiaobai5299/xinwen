@@ -9,7 +9,7 @@ import json
 import hashlib
 import re
 import os
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import pandas as pd
 
 
@@ -187,7 +187,7 @@ class ClsSpider:
 
 
 # ==================== HTML生成 ====================
-def generate_html(news_data, target_date):
+def generate_html(news_data, target_date, push_type="今日"):
     """把新闻数据生成HTML网页"""
     # 筛选相关新闻
     related = [n for n in news_data if n["事件类型"] != "其他"]
@@ -197,7 +197,7 @@ def generate_html(news_data, target_date):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>今日相关新闻 - {target_date}</title>
+<title>{push_type}相关新闻 - {target_date}</title>
 <style>
   *{{margin:0;padding:0;box-sizing:border-box}}
   body{{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f5f5f5;padding:20px;color:#333}}
@@ -222,10 +222,10 @@ def generate_html(news_data, target_date):
 </head>
 <body>
 <div class="container">
-  <h1>📊 今日相关新闻</h1>
+  <h1>📊 {push_type}相关新闻</h1>
   <div class="date">{target_date}</div>
   <div class="summary">
-    <h2>今日筛选结果</h2>
+    <h2>{push_type}筛选结果</h2>
     <div class="count">{len(related)}</div>
     <div>条相关新闻</div>
 """
@@ -265,18 +265,18 @@ def generate_html(news_data, target_date):
     return html
 
 
-def generate_summary(news_data):
+def generate_summary(news_data, push_type="今日"):
     """生成微信推送的摘要文本"""
     related = [n for n in news_data if n["事件类型"] != "其他"]
     if not related:
-        return "今日无相关新闻"
+        return f"{push_type}无相关新闻"
     
     pork = sum(1 for n in related if n["事件类型"] == "猪肉涨价")
     mna = sum(1 for n in related if n["事件类型"] == "A股重组")
     order = sum(1 for n in related if n["事件类型"] == "订单")
     
     lines = [
-        f"📊 今日相关新闻共 {len(related)} 条",
+        f"📊 {push_type}相关新闻共 {len(related)} 条",
         f"🐷 猪肉涨价: {pork}条 | 🔄 A股重组: {mna}条 | 📦 订单: {order}条",
         "",
         "👇 点击查看完整内容"
@@ -292,15 +292,25 @@ def generate_summary(news_data):
 
 # ==================== 主流程 ====================
 def main():
-    # 取北京时间今天
-    # GitHub Actions的时区是UTC，需要减8小时
-    today = datetime.utcnow()
-    # 如果是北京时间下午7点后运行，已经是第二天了
-    # 简单处理：取今天的日期
-    target_date = today.strftime("%Y-%m-%d")
+    # 北京时间
+    tz = timezone(timedelta(hours=8))
+    beijing_now = datetime.now(tz)
+    beijing_hour = beijing_now.hour
+    
+    # 判断是早间推送（昨日新闻）还是晚间推送（今日新闻）
+    if beijing_hour < 12:
+        # 早上：推送昨天的新闻
+        target_date = (beijing_now - timedelta(days=1)).strftime("%Y-%m-%d")
+        push_type = "昨日"
+    else:
+        # 下午/晚上：推送今天的新闻
+        target_date = beijing_now.strftime("%Y-%m-%d")
+        push_type = "今日"
     
     print(f"\n{'='*60}")
     print(f"📅 执行日期: {target_date}")
+    print(f"🕐 北京时间: {beijing_now.strftime('%Y-%m-%d %H:%M')}")
+    print(f"📌 推送类型: {push_type}相关新闻")
     print(f"🔧 APP_ID: {APP_ID[:6]}...")
     print(f"{'='*60}")
     
@@ -309,7 +319,7 @@ def main():
     news_data = spider.run(target_date)
     
     # 2. 生成HTML
-    html_content = generate_html(news_data, target_date)
+    html_content = generate_html(news_data, target_date, push_type)
     
     # 保存HTML到仓库根目录（GitHub Pages会从这里读取）
     html_path = "index.html"
@@ -321,7 +331,7 @@ def main():
     if APP_ID and APP_SECRET and OPEN_ID and TEMPLATE_ID:
         try:
             token = get_access_token()
-            summary = generate_summary(news_data)
+            summary = generate_summary(news_data, push_type)
             html_url = PAGES_URL  # GitHub Pages主页
             send_news_msg(token, summary, html_url)
         except Exception as e:
