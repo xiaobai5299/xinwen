@@ -17,7 +17,7 @@ import pandas as pd
 # 这些敏感信息用环境变量，不要在代码里写死
 APP_ID = os.environ.get("APP_ID", "")
 APP_SECRET = os.environ.get("APP_SECRET", "")
-OPEN_ID = os.environ.get("OPEN_ID", "")
+OPEN_IDS = os.environ.get("OPEN_IDS", "").split(",") if os.environ.get("OPEN_IDS") else []
 TEMPLATE_ID = os.environ.get("TEMPLATE_ID", "")
 
 # GitHub Pages 地址（改成你自己的）
@@ -38,25 +38,29 @@ def get_access_token():
 
 
 def send_news_msg(access_token, summary, html_url):
-    """发送模板消息（带网页链接）"""
-    body = {
-        "touser": OPEN_ID,
-        "template_id": TEMPLATE_ID,
-        "url": html_url,
-        "data": {
-            "summary": {
-                "value": summary
+    """发送模板消息（带网页链接），支持多人群发"""
+    results = []
+    for open_id in OPEN_IDS:
+        body = {
+            "touser": open_id.strip(),
+            "template_id": TEMPLATE_ID,
+            "url": html_url,
+            "data": {
+                "summary": {
+                    "value": summary
+                }
             }
         }
-    }
-    url = f'https://api.weixin.qq.com/cgi-bin/message/template/send?access_token={access_token}'
-    resp = requests.post(url, json.dumps(body)).json()
-    
-    if resp.get("errcode") == 0:
-        print("✅ 微信推送成功")
-    else:
-        print(f"❌ 微信推送失败: {resp}")
-    return resp
+        url = f'https://api.weixin.qq.com/cgi-bin/message/template/send?access_token={access_token}'
+        resp = requests.post(url, json.dumps(body)).json()
+        
+        if resp.get("errcode") == 0:
+            print(f"✅ 微信推送成功 -> {open_id.strip()[:8]}...")
+        else:
+            print(f"❌ 微信推送失败 -> {open_id.strip()[:8]}...: {resp}")
+        results.append(resp)
+        time.sleep(2)
+    return results
 
 
 # ==================== CLS爬虫（直接从filter3.py整合） ====================
