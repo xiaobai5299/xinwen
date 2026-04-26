@@ -22,7 +22,7 @@ TEMPLATE_ID = os.environ.get("TEMPLATE_ID", "")
 
 # GitHub Pages 地址（改成你自己的）
 GITHUB_USERNAME = os.environ.get("USERNAME", "你的用户名")
-REPO_NAME = "daily-news-push"  # 改成你的仓库名
+REPO_NAME = "xinwen"  # 改成你的仓库名
 PAGES_URL = f"https://{GITHUB_USERNAME}.github.io/{REPO_NAME}"
 
 
