@@ -44,7 +44,7 @@ def send_news_msg(access_token, summary, html_url):
         "template_id": TEMPLATE_ID,
         "url": html_url,
         "data": {
-            "message": {
+            "summary": {
                 "value": summary
             }
         }
@@ -287,7 +287,7 @@ def generate_summary(news_data):
         title = news["标题"][:25]
         lines.insert(2 + i, f"{news['事件类型'][:2]} {title}")
     
-    return "\n".join(lines)
+    return " · ".join(lines)
 
 
 # ==================== 主流程 ====================
