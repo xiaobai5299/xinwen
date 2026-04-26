@@ -2,9 +2,11 @@ name: 每日新闻推送
 
 on:
   schedule:
-    # 北京时间每天8:00 (UTC 0:00)
+    # 北京时间每天早上8:00 (UTC 0:00) — 推送昨日新闻
     - cron: '0 0 * * *'
-  workflow_dispatch:  # 允许手动触发测试
+    # 北京时间每天下午18:00 (UTC 10:00) — 推送今日新闻
+    - cron: '0 10 * * *'
+  workflow_dispatch:
 
 jobs:
   run:
@@ -12,10 +14,10 @@ jobs:
     
     steps:
       - name: 检出代码
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: 设置Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
       
@@ -28,7 +30,6 @@ jobs:
           APP_SECRET: ${{ secrets.APP_SECRET }}
           OPEN_ID: ${{ secrets.OPEN_ID }}
           TEMPLATE_ID: ${{ secrets.TEMPLATE_ID }}
-          GITHUB_USERNAME: ${{ secrets.USERNAME }}
         run: python main.py
       
       - name: 提交HTML更新
