@@ -28,7 +28,7 @@ jobs:
           APP_SECRET: ${{ secrets.APP_SECRET }}
           OPEN_ID: ${{ secrets.OPEN_ID }}
           TEMPLATE_ID: ${{ secrets.TEMPLATE_ID }}
-          GITHUB_USERNAME: ${{ secrets.GITHUB_USERNAME }}
+          GITHUB_USERNAME: ${{ secrets.USERNAME }}
         run: python main.py
       
       - name: 提交HTML更新
